@@ -1,6 +1,6 @@
 ### Hi there 👋
 
-### Here are some of the things I love to do:
+#### Here are some of the things I love to do:
 
 * Coding, Synthesizer, Hermes Games,
 * CMS, IoT, Arduino, Full Stack Development, IDEs,
