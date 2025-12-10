@@ -6,5 +6,5 @@
 
 #
 
-<img src="https://github-readme-stats-git-masterrstaa-rickstaa.vercel.app/api/top-langs?username=abgsatman&layout=compact&langs_count=30&bg_color=181818&card_width=400&border_color=dedede&text_color=efefef"/>
+![Metrics](https://metrics.lecoq.io/abgsatman?template=classic&languages=1&languages.limit=8&theme=dark)
 
