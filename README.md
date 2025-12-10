@@ -6,5 +6,4 @@
 
 #
 
-![Metrics](https://metrics.lecoq.io/abgsatman?template=classic&languages=1&languages.limit=8&theme=dark)
-
+![](http://github-profile-summary-cards.vercel.app/api/cards/repos-per-language?username=abgsatman&theme=github_dark&exclude={exclude})
