@@ -1,0 +1,38 @@
+name: Update Language Stats
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 3 * * 1'   # Her Pazartesi 03:00 UTC
+  workflow_dispatch:        # Manuel tetikleme (Actions sekmesinden)
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Generate language SVG
+        env:
+          GH_TOKEN:    ${{ secrets.GH_TOKEN }}
+          GH_USERNAME: abgsatman
+        run: python scripts/generate_langs.py
+
+      - name: Commit & push if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add assets/langs.svg
+          git diff --staged --quiet && echo "No changes" || \
+            (git commit -m "chore: update language stats [skip ci]" && git push)

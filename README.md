@@ -6,6 +6,4 @@
 
 #
 
-![](http://github-profile-summary-cards.vercel.app/api/cards/repos-per-language?username=abgsatman&theme=github_dark&exclude={exclude})
-
-![](http://github-profile-summary-cards.vercel.app/api/cards/most-commit-language?username=abgsatman&theme=github_dark)
+![Most Used Languages](assets/langs.svg)
