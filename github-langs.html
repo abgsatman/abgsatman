@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitHub Dil İstatistikleri</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 8px;
+      color: #58a6ff;
+    }
+    .subtitle { color: #8b949e; font-size: 0.9rem; margin-bottom: 32px; }
+    .card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 24px;
+      width: 100%;
+      max-width: 520px;
+      margin-bottom: 32px;
+    }
+    label { display: block; font-size: 0.85rem; color: #8b949e; margin-bottom: 6px; }
+    input {
+      width: 100%;
+      padding: 10px 14px;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      color: #e6edf3;
+      font-size: 0.95rem;
+      margin-bottom: 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus { border-color: #58a6ff; }
+    button {
+      width: 100%;
+      padding: 11px;
+      background: #238636;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background: #2ea043; }
+    button:disabled { background: #21262d; color: #8b949e; cursor: not-allowed; }
+    #status {
+      font-size: 0.85rem;
+      color: #8b949e;
+      margin-top: 12px;
+      min-height: 20px;
+      text-align: center;
+    }
+    #status.error { color: #f85149; }
+    #results { width: 100%; max-width: 860px; display: none; }
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 680px) { .results-grid { grid-template-columns: 1fr; } }
+    .chart-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .chart-card h2 { font-size: 1rem; color: #8b949e; margin-bottom: 16px; }
+    canvas { max-width: 100%; }
+    .lang-list { list-style: none; }
+    .lang-list li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #21262d;
+      font-size: 0.9rem;
+    }
+    .lang-list li:last-child { border-bottom: none; }
+    .dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .lang-name { flex: 1; }
+    .lang-pct { color: #8b949e; font-size: 0.85rem; }
+    .lang-bytes { color: #3fb950; font-size: 0.78rem; margin-left: 4px; }
+    #summary {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 16px 24px;
+      margin-bottom: 24px;
+      font-size: 0.88rem;
+      color: #8b949e;
+      text-align: center;
+    }
+    #summary span { color: #58a6ff; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>GitHub Dil İstatistikleri</h1>
+  <p class="subtitle">Tüm repolarındaki dil dağılımını görselleştir</p>
+
+  <div class="card">
+    <label for="username">GitHub Kullanıcı Adı</label>
+    <input id="username" type="text" placeholder="örn: gokhans" />
+
+    <label for="token">Personal Access Token</label>
+    <input id="token" type="password" placeholder="ghp_xxxxxxxxxxxx" />
+
+    <button id="btn" onclick="fetchData()">Analiz Et</button>
+    <div id="status"></div>
+  </div>
+
+  <div id="results">
+    <div id="summary"></div>
+    <div class="results-grid">
+      <div class="chart-card">
+        <h2>Dil Dağılımı (byte bazlı)</h2>
+        <canvas id="pieChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h2>Sıralama</h2>
+        <ul class="lang-list" id="langList"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let pieChart = null;
+
+    // GitHub'ın resmi dil renkleri (en yaygın diller)
+    const LANG_COLORS = {
+      JavaScript: '#f1e05a', TypeScript: '#3178c6', Python: '#3572A5',
+      Java: '#b07219', 'C#': '#178600', 'C++': '#f34b7d', C: '#555555',
+      Go: '#00ADD8', Rust: '#dea584', Ruby: '#701516', PHP: '#4F5D95',
+      Swift: '#F05138', Kotlin: '#A97BFF', Dart: '#00B4AB', Shell: '#89e051',
+      HTML: '#e34c26', CSS: '#563d7c', Vue: '#41b883', Svelte: '#ff3e00',
+      Scala: '#c22d40', R: '#198CE7', Haskell: '#5e5086', Lua: '#000080',
+      Elixir: '#6e4a7e', Clojure: '#db5855', MATLAB: '#e16737',
+      'Jupyter Notebook': '#DA5B0B', Makefile: '#427819', Dockerfile: '#384d54',
+    };
+
+    function randomColor(seed) {
+      const h = (seed * 137.508) % 360;
+      return `hsl(${h}, 60%, 55%)`;
+    }
+
+    function getColor(lang, index) {
+      return LANG_COLORS[lang] || randomColor(index * 47 + 11);
+    }
+
+    function formatBytes(bytes) {
+      if (bytes >= 1_000_000) return (bytes / 1_000_000).toFixed(1) + ' MB';
+      if (bytes >= 1_000) return (bytes / 1_000).toFixed(1) + ' KB';
+      return bytes + ' B';
+    }
+
+    async function fetchAllRepos(username, token) {
+      const headers = { Authorization: `token ${token}` };
+      let repos = [], page = 1;
+      while (true) {
+        const res = await fetch(
+          `https://api.github.com/users/${username}/repos?per_page=100&page=${page}&type=all`,
+          { headers }
+        );
+        if (!res.ok) throw new Error(`API hatası: ${res.status} ${res.statusText}`);
+        const data = await res.json();
+        if (!data.length) break;
+        repos = repos.concat(data);
+        if (data.length < 100) break;
+        page++;
+      }
+      return repos;
+    }
+
+    async function fetchLangs(owner, repo, token) {
+      const res = await fetch(
+        `https://api.github.com/repos/${owner}/${repo}/languages`,
+        { headers: { Authorization: `token ${token}` } }
+      );
+      if (!res.ok) return {};
+      return res.json();
+    }
+
+    function setStatus(msg, isError = false) {
+      const el = document.getElementById('status');
+      el.textContent = msg;
+      el.className = isError ? 'error' : '';
+    }
+
+    async function fetchData() {
+      const username = document.getElementById('username').value.trim();
+      const token = document.getElementById('token').value.trim();
+      if (!username || !token) {
+        setStatus('Lütfen kullanıcı adı ve token girin.', true);
+        return;
+      }
+
+      const btn = document.getElementById('btn');
+      btn.disabled = true;
+      document.getElementById('results').style.display = 'none';
+
+      try {
+        setStatus('Repolar getiriliyor...');
+        const repos = await fetchAllRepos(username, token);
+        setStatus(`${repos.length} repo bulundu, dil verileri alınıyor...`);
+
+        const totals = {};
+        for (let i = 0; i < repos.length; i++) {
+          const r = repos[i];
+          setStatus(`İşleniyor: ${i + 1}/${repos.length} — ${r.name}`);
+          const langs = await fetchLangs(r.owner.login, r.name, token);
+          for (const [lang, bytes] of Object.entries(langs)) {
+            totals[lang] = (totals[lang] || 0) + bytes;
+          }
+        }
+
+        const totalBytes = Object.values(totals).reduce((a, b) => a + b, 0);
+        const sorted = Object.entries(totals)
+          .sort((a, b) => b[1] - a[1]);
+
+        // Top 12 göster, geri kalanı "Diğer" olarak grupla
+        const TOP = 12;
+        const top = sorted.slice(0, TOP);
+        const others = sorted.slice(TOP);
+        if (others.length) {
+          const otherBytes = others.reduce((s, [, b]) => s + b, 0);
+          top.push(['Diğer', otherBytes]);
+        }
+
+        renderChart(top, totalBytes);
+        renderList(top, totalBytes);
+
+        document.getElementById('summary').innerHTML =
+          `<span>${repos.length}</span> repo &nbsp;·&nbsp; ` +
+          `<span>${sorted.length}</span> farklı dil &nbsp;·&nbsp; ` +
+          `toplam <span>${formatBytes(totalBytes)}</span> kod`;
+        document.getElementById('results').style.display = 'block';
+        setStatus('');
+      } catch (e) {
+        setStatus(e.message, true);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function renderChart(data, total) {
+      const labels = data.map(([l]) => l);
+      const values = data.map(([, b]) => b);
+      const colors = data.map(([l], i) => getColor(l, i));
+
+      if (pieChart) pieChart.destroy();
+      const ctx = document.getElementById('pieChart').getContext('2d');
+      pieChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 2, borderColor: '#161b22' }] },
+        options: {
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  const pct = ((ctx.raw / total) * 100).toFixed(1);
+                  return ` ${ctx.label}: ${pct}% (${formatBytes(ctx.raw)})`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function renderList(data, total) {
+      const list = document.getElementById('langList');
+      list.innerHTML = data.map(([lang, bytes], i) => {
+        const pct = ((bytes / total) * 100).toFixed(1);
+        return `<li>
+          <span class="dot" style="background:${getColor(lang, i)}"></span>
+          <span class="lang-name">${lang}</span>
+          <span class="lang-pct">${pct}%</span>
+          <span class="lang-bytes">${formatBytes(bytes)}</span>
+        </li>`;
+      }).join('');
+    }
+  </script>
+</body>
+</html>
