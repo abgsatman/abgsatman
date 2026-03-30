@@ -1,31 +1,26 @@
 name: Update Language Stats
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   push:
     branches: [main]
   schedule:
-    - cron: '0 3 * * 1'
+    - cron: '0 3 * * 1' # Her Pazartesi 03:00 UTC
   workflow_dispatch:
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
-permissions:
-  contents: write
 
 jobs:
   update:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: write
     steps:
-      # ✅ Version pin
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@v4
 
-      # ✅ Python + cache
-      - uses: actions/setup-python@v5.1.0
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'pip'
 
       - name: Install dependencies
         run: pip install requests
@@ -36,17 +31,10 @@ jobs:
           GH_USERNAME: abgsatman
         run: python scripts/generate_langs.py
 
-      # ✅ Daha safe commit
       - name: Commit & push if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
           git add assets/langs.svg
-
-          if git diff --staged --quiet; then
-            echo "No changes"
-          else
-            git commit -m "chore: update language stats [skip ci]"
-            git push
-          fi
+          git diff --staged --quiet && echo "No changes" || \
+            (git commit -m "chore: update language stats [skip ci]" && git push)
