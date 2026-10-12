@@ -25,3 +25,5 @@ I've been involved in game development since 2012 and previously released two mo
 LEGO builds, synthesizers, history, science fiction, and strategy games.
 
 [Brickylab](https://brickylab.com/) · [YouTube](https://www.youtube.com/@brickylab) · [Instagram](https://instagram.com/brickylab.official)
+
+![](http://github-profile-summary-cards.vercel.app/api/cards/most-commit-language?username=abgsatman&theme=github_dark)
