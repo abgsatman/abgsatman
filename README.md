@@ -11,7 +11,7 @@ A medieval 2D isometric real-time strategy game focused on economy, expansion, a
 I've been involved in game development since 2012 and previously released two mobile versions of Wars of Empire on Android and iOS. Today, I'm rebuilding it for PC, web, and mobile.
 
 **[🎮 Wishlist Wars of Empire on Steam](https://store.steampowered.com/app/5289420/Wars_of_Empire/)**  
-[Watch the trailer](https://www.youtube.com/watch?v=ae3HQBZAarM)
+[Watch the trailer](https://www.youtube.com/watch?v=jn5WMhT58Z8)
 
 ## 💻 What I work on
 
